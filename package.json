@@ -1,0 +1,27 @@
+{
+	"name": "evernote-extractor",
+	"version": "0.0.1",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Mark Biek (support@janustech.net)",
+	"license": "ISC",
+	"devDependencies": {
+		"@prettier/plugin-php": "^0.16.1",
+		"husky": "^5.0.9",
+		"lint-staged": "^10.5.4",
+		"prettier": "^2.2.1"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged",
+			"pre-push": "lint-staged"
+		}
+	},
+	"lint-staged": {
+		"**/resources/**/*.js": "eslint",
+		"src/**/*.php": [
+			"php -l"
+		]
+	}
+}
