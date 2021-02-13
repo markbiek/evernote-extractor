@@ -2,7 +2,9 @@
     "require": {
         "symfony/dotenv": "^5.2",
         "symfony/console": "^5.2",
-        "symfony/dom-crawler": "^5.2"
+        "symfony/dom-crawler": "^5.2",
+        "symfony/css-selector": "^5.2",
+        "league/html-to-markdown": "^4.10"
     },
     "autoload": {
         "psr-4": {
