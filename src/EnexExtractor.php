@@ -5,13 +5,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DomCrawler\Crawler;
 
 use App\Models\Note;
-
-class FileNotFoundException extends \Exception {
-}
-class DirectoryNotFoundException extends \Exception {
-}
-class DirectoryNotWritableException extends \Exception {
-}
+use App\Exceptions\{FileNotFoundException, DirectoryNotFoundException};
 
 class EnexExtractor {
 	protected string $file = '';
@@ -51,16 +45,8 @@ class EnexExtractor {
 		foreach ($crawler as $domElement) {
 			$noteIdx++;
 
-			$noteName = 'note-' . str_pad($noteIdx, 3, '0', STR_PAD_LEFT);
-			$dir = "{$this->dir}/{$noteName}";
-			if (!\file_exists($dir)) {
-				if (mkdir($dir) === false) {
-					throw new DirectoryNotWritableException();
-				}
-			}
-
-			$note = new Note($domElement);
-			$note->dump($dir);
+			$note = new Note($domElement, $noteIdx);
+			$note->dump($this->dir);
 		}
 	}
 }

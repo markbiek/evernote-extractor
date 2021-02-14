@@ -36,7 +36,8 @@ use App\EnexExtractor;
 
 			return Command::SUCCESS;
 		} catch (\Exception $e) {
-			//
+			throw $e;
+
 			return Command::FAILURE;
 		}
 	})
