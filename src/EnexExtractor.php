@@ -5,7 +5,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DomCrawler\Crawler;
 
 use App\Models\Note;
-use App\Exceptions\{FileNotFoundException, DirectoryNotFoundException};
+use App\Exceptions\{
+	FileNotFoundException,
+	DirectoryNotFoundException,
+	ResourceMismatchException,
+};
 
 class EnexExtractor {
 	protected string $file = '';
@@ -41,12 +45,20 @@ class EnexExtractor {
 		$crawler = new Crawler($content);
 		$crawler = $crawler->filterXPath('descendant-or-self::en-export/note');
 
+		$filename = \pathinfo($this->file, PATHINFO_FILENAME);
+
 		$noteIdx = 0;
 		foreach ($crawler as $domElement) {
 			$noteIdx++;
 
-			$note = new Note($domElement, $noteIdx);
-			$note->dump($this->dir);
+			try {
+				$note = new Note($domElement, $noteIdx);
+				$note->dump("{$this->dir}/{$filename}");
+			} catch (ResourceMismatchException $e) {
+				echo "Warning: Could not export '{$note->title}' because of a resource mismatch.\n";
+			} catch (\Exception $e) {
+				echo "ERROR with note {$noteIdx}: " . $e->getMessage() . "\n";
+			}
 		}
 	}
 }

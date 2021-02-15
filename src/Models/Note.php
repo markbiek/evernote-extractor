@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use Symfony\Component\DomCrawler\Crawler;
+use League\HTMLToMarkdown\HtmlConverter;
 
 use App\Exceptions\{
 	ResourceMismatchException,
@@ -29,7 +30,8 @@ class Note {
 		$this->initResources();
 
 		if (count($this->resources) != count($this->resourceTypes)) {
-			throw new ResourceMismatchException();
+			$this->resources = [];
+			$this->resourcesTypes = [];
 		}
 	}
 
@@ -46,7 +48,7 @@ class Note {
 			'-' .
 			$this->title;
 		$dir = "{$baseDir}/{$noteName}";
-		if (mkdir($dir) === false) {
+		if (mkdir($dir, 0777, true) === false) {
 			throw new DirectoryNotWritableException($dir);
 		}
 
@@ -58,7 +60,13 @@ class Note {
 			return true;
 		}
 
-		return file_put_contents("$dir/note.html", $this->content) !== false;
+		$converter = new HtmlConverter();
+
+		return file_put_contents("$dir/note.html", $this->content) !== false &&
+			file_put_contents(
+				"$dir/note.md",
+				$converter->convert($this->content),
+			) !== false;
 	}
 
 	protected function dumpMedia(string $dir): bool {
@@ -66,15 +74,16 @@ class Note {
 			'image/jpeg' => 'jpg',
 			'image/jpg' => 'jpg',
 			'image/png' => 'png',
+			'image/gif' => 'gif',
+			'image/svg+xml' => 'svg',
 			'application/pdf' => 'pdf',
+			'application/x-bitcoin-wallet-backup' => 'date',
+			'text/plain' => 'txt',
 		];
 		$ret = true;
 
 		foreach ($this->resources as $idx => $resourceData) {
 			$type = $types[$this->resourceTypes[$idx]];
-			if (empty($type)) {
-				throw new ResourceTypeNotFoundException();
-			}
 
 			$filename = "resource-{$idx}.{$type}";
 			if (
@@ -99,8 +108,16 @@ class Note {
 		$resourceNodes = $this->el->getElementsByTagName('resource');
 
 		foreach ($resourceNodes as $resource) {
+			$encoding = '';
 			$dataNode = $resource->getElementsByTagName('data')->item(0);
-			$encoding = $dataNode->attributes->getNamedItem('encoding')->value;
+			if (empty($dataNode)) {
+				continue;
+			}
+
+			if ($dataNode->hasAttributes()) {
+				$encoding = $dataNode->attributes->getNamedItem('encoding')
+					->value;
+			}
 
 			// Currently, we only handle base64-encoded file data
 			if ($encoding != 'base64') {

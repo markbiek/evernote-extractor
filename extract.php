@@ -12,6 +12,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use App\EnexExtractor;
 
+if (!function_exists('dbg')) {
+	function dbg($msg) {
+		echo 'DEBUG: ' . date('c') . ":\t" . print_r($msg, true) . "\n";
+	}
+}
+
 (new SingleCommandApplication())
 	->setName('Evernote Extractor') // Optional
 	->setVersion('0.0.1') // Optional
